@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Global Chat</title>
+    <script>
+        let socket;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            socket.onopen = () => {
+                console.log("Connected to server");
+            };
+
+            socket.onmessage = (event) => {
+                const msg = event.data;
+                console.log("Received message:", msg);
+                addMessage(msg);
+            };
+
+            socket.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+
+            socket.onclose = () => {
+                console.log("Disconnected from server");
+            };
+        }
+
+        function sendMessage() {
+            if (socket.readyState !== WebSocket.OPEN) {
+                alert("Connection is not open");
+                return;
+            }
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            console.log("Sending message:", message);
+            socket.send(JSON.stringify({ Type: "global", Text: message }));
+            input.value = '';
+        }
+
+        function addMessage(msg) {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            document.getElementById('messages').appendChild(li);
+        }
+
+        window.onload = () => {
+            connectWebSocket();
+        };
+    </script>
+</head>
+<body>
+    <h2>Welcome, {{username}}! <a href="/logout">Logout</a></h2>
+    <h3>Global Chat</h3>
+    <ul id="messages"></ul>
+    <input id="messageInput" type="text" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+</body>
+</html>
